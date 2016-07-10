@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   viewBox="0 0 45 54"
+   version="1.1"
+   x="0px"
+   y="0px"
+   id="svg4136"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="arrow_template.svg"
+   inkscape:export-filename="H:\Projects\private\chrome-extensions\chrome-yt-load-all-items\app\images\icon-128.png"
+   inkscape:export-xdpi="251.06"
+   inkscape:export-ydpi="251.06">
+  <metadata
+     id="metadata4158">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>download</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs4156">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4171"
+       osb:paint="gradient">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop4173" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop4175" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1360"
+     inkscape:window-height="746"
+     id="namedview4154"
+     showgrid="false"
+     inkscape:zoom="11.313709"
+     inkscape:cx="30.778687"
+     inkscape:cy="14.588287"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g4144" />
+  <title
+     id="title4138">download</title>
+  <desc
+     id="desc4140">Created with Sketch.</desc>
+  <g
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd"
+     id="g4142">
+    <g
+       transform="translate(-860.000000, -86.000000)"
+       fill="#000000"
+       id="g4144">
+      <path
+         style="opacity:1;fill:#e62117;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 21.195884,28.804729 c -1.420151,-0.343866 -2.820239,-1.431626 -3.487339,-2.709392 -0.668251,-1.27997 -0.636524,-0.702683 -0.636524,-11.581951 0,-10.7757225 -0.0255,-10.2740474 0.584572,-11.5009508 0.195572,-0.3933114 0.547099,-0.8551719 1.00092,-1.3150769 1.88475,-1.91001774 4.7183,-2.18839711 6.925366,-0.6803759 0.760798,0.5198301 1.263743,1.0849477 1.692916,1.9021886 0.705646,1.3437035 0.661511,0.569003 0.661511,11.611399 l 0,9.88601 -0.206853,0.65285 c -0.581464,1.83517 -2.06759,3.250265 -3.910236,3.723343 -0.678166,0.174111 -1.931068,0.17982 -2.624333,0.01196 z"
+         id="path4163"
+         inkscape:connector-curvature="0"
+         transform="translate(860,86)"
+         inkscape:export-filename="H:\Projects\private\chrome-extensions\chrome-yt-load-all-items\app\images\icon-16.png"
+         inkscape:export-xdpi="32"
+         inkscape:export-ydpi="32" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4148"
+         d="m 865.65449,112.17507 c -1.06038,-1.27995 -0.57666,-2.31756 1.08468,-2.31756 l 30.51756,0 c 1.65944,0 2.14829,1.03372 1.08469,2.31756 l -14.42348,17.41009 c -1.06038,1.27995 -2.77637,1.28384 -3.83998,0 l -14.42347,-17.41009 z"
+         style="fill:#e62117;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+         inkscape:export-filename="H:\Projects\private\chrome-extensions\chrome-yt-load-all-items\app\images\icon-16.png"
+         inkscape:export-xdpi="32.09"
+         inkscape:export-ydpi="32.09" />
+      <path
+         style="opacity:1;fill:#e62117;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 2.6753089,53.841449 C 1.6867996,53.600418 0.78338584,52.832189 0.32616544,51.843827 0.02112031,51.184419 -0.01716624,50.090148 0.23912051,49.35599 0.45384809,48.740881 0.99270345,48.046694 1.5547616,47.661098 2.482635,47.024537 0.90982418,47.066768 22.694862,47.093473 l 19.721882,0.02417 0.554505,0.272258 c 0.733438,0.360112 1.30604,0.949351 1.662242,1.710538 0.380779,0.813708 0.406633,1.814011 0.06928,2.680416 -0.297124,0.763079 -1.140323,1.609412 -1.912968,1.920079 l -0.559586,0.224999 -19.53886,0.01593 C 7.3533625,53.954378 3.0498997,53.932787 2.6753089,53.841449 Z"
+         id="path4169"
+         inkscape:connector-curvature="0"
+         transform="translate(860,86)"
+         inkscape:export-filename="H:\Projects\private\chrome-extensions\chrome-yt-load-all-items\app\images\icon-16.png"
+         inkscape:export-xdpi="32.09"
+         inkscape:export-ydpi="32.09" />
+      <path
+         style="opacity:1;fill:#e62117;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 17.031813,23.656331 c 0.08619,-0.476263 0.133472,-0.511752 0.133472,-0.100177 0,0.185055 -0.04465,0.364057 -0.09921,0.397781 -0.06755,0.04175 -0.07849,-0.05321 -0.03426,-0.297604 z"
+         id="path4165"
+         inkscape:connector-curvature="0"
+         transform="translate(860,86)"
+         inkscape:export-filename="H:\Projects\private\chrome-extensions\chrome-yt-load-all-items\app\images\path4165.png"
+         inkscape:export-xdpi="32.09"
+         inkscape:export-ydpi="32.09" />
+      <rect
+         style="opacity:1;fill:#e62117;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect5625"
+         width="9.8360596"
+         height="2.8752942"
+         x="877.59442"
+         y="107.71857"
+         ry="0" />
+      <rect
+         style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect5635"
+         width="0.55958551"
+         height="0.87435234"
+         x="876.85754"
+         y="109.21114" />
+    </g>
+  </g>
+</svg>
