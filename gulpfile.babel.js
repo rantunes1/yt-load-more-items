@@ -64,13 +64,7 @@ gulp.task('html',  () => {
 gulp.task('chromeManifest', () => {
   return gulp.src('app/manifest.json')
     .pipe($.chromeManifest({
-      buildnumber: true,
-      background: {
-        target: 'scripts/background.js',
-        exclude: [
-          'scripts/chromereload.js'
-        ]
-      }
+      buildnumber: true
   }))
   .pipe($.if('*.css', $.minifyCss({compatibility: '*'})))
   .pipe($.if('*.js', $.sourcemaps.init()))
@@ -132,4 +126,8 @@ gulp.task('build', (cb) => {
 
 gulp.task('default', ['clean'], cb => {
   runSequence('build', cb);
+});
+
+gulp.task('dist', cb => {
+  runSequence('clean', 'build', 'package', cb);
 });

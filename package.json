@@ -1,5 +1,5 @@
 {
-  "name": "yt-load-all",
+  "name": "yt-load-more-items",
   "private": true,
   "engines": {
     "node": ">=0.8.0"
