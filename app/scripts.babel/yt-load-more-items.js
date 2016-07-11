@@ -11,7 +11,13 @@
         var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video', '.comment-renderer'];
 
         var count = Math.min(...itemSelectors.map(function (selector) {
-            return window.document.querySelector('#content').querySelectorAll(selector).length;
+            var $container = window.document.querySelector('#content');
+            if(!$container){
+                //if logged out on the new material interface the id changes to  'contents' (plural). I'll assume this is a bug on YT.
+                $container = window.document.querySelector('#contents');
+            }
+           
+            return $container ? $container.querySelectorAll(selector).length : 0;
         }).filter(function (value) {
             return value > 0;
         }));
