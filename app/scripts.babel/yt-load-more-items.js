@@ -6,17 +6,36 @@
 
     var _interval = null;
     var _url = null;
+    var _lastItemCount = 0;
+    var _retries = 0;
+    
+    var getItemsContainer = function(){
+        var $container = window.document.querySelector('#content');
+        if(!$container){
+            //if logged out on the new material interface the id changes to  'contents' (plural). I'll assume this is a bug on YT.
+            $container = window.document.querySelector('#contents');
+        }
+        return $container;
+    };
+    
+    var expandShowMoreButtons = function(){
+        var $container = getItemsContainer();
+        if(!$container){
+            return;
+        }
+        
+        $container.querySelectorAll('.yt-uix-expander-head').forEach(function($expander){
+            if(!$expander.classList.contains('hidden-expander') && $expander.parentNode && $expander.parentNode.classList.contains('yt-uix-expander-collapsed')){
+                $expander.click();
+            }
+        });
+    };
 
     var countPageItems = function () {
         var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video', '.comment-renderer'];
 
+        var $container = getItemsContainer();
         var count = Math.min(...itemSelectors.map(function (selector) {
-            var $container = window.document.querySelector('#content');
-            if(!$container){
-                //if logged out on the new material interface the id changes to  'contents' (plural). I'll assume this is a bug on YT.
-                $container = window.document.querySelector('#contents');
-            }
-           
             return $container ? $container.querySelectorAll(selector).length : 0;
         }).filter(function (value) {
             return value > 0;
@@ -46,6 +65,21 @@
                 var $button = window.document.querySelector('.load-more-button');
 
                 var itemCount = updatePageCounter();
+                if(itemCount === _lastItemCount){
+                    _retries ++;
+                    if(_retries > 3){
+                        console.info('button exists but there\'s no more items to load. stopping items loader.');
+                        _lastItemCount = 0;
+                        _retries = 0;
+                        window.clearInterval(_interval);
+                        _interval = null;
+                        resolve();
+                        return false;
+                    }
+                }else{
+                    _retries = 0;
+                }
+                _lastItemCount = itemCount;
 
                 var wasItemCountExceeded = itemCount && maxItemCount ? itemCount >= maxItemCount : false;
 
@@ -72,6 +106,8 @@
                 $button.removeAttribute('data-scrolldetect-offset');
                 $button.removeAttribute('data-scrolldetect-callback');
                 $button.click();
+                
+                expandShowMoreButtons();
             }, 1500);
         });
     };
@@ -81,6 +117,8 @@
             _url = window.location.href;
             window.setTimeout(function () {
                 updatePageCounter();
+                expandShowMoreButtons();
+                window.scrollTo(0,0);
             }, 1400);
         } else {
             var $commentsContainer = window.document.querySelector('.comment-section-renderer-items');
@@ -89,6 +127,11 @@
                 updatePageCounter();
             }
         }
+    }, 1500);
+    
+    window.setTimeout(function () {
+        expandShowMoreButtons();
+        window.scrollTo(0,0);
     }, 1500);
 
     var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn'); //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
@@ -118,7 +161,6 @@
             $content.classList.add('more-items-button');
         }
             
-
         $loadMoreBtn.onclick = function (event) {
             event.stopPropagation();
             event.preventDefault();
