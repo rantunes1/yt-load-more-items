@@ -8,6 +8,20 @@
     var _url = null;
     var _lastItemCount = 0;
     var _retries = 0;
+    var _period = 1500;
+   
+    var replaceTextContent = function($elem, text){
+        if(!$elem){
+            return;
+        }
+        $elem.childNodes.forEach(function($node){
+            $node.parentNode.removeChild($node)
+        });
+        if(text){
+            var $text = window.document.createTextNode(text);
+            $elem.appendChild($text);        
+        }
+    }
     
     var getItemsContainer = function(){
         var $container = window.document.querySelector('#content');
@@ -17,7 +31,8 @@
         }
         return $container;
     };
-    
+
+    //automatically expands video description's
     var expandShowMoreButtons = function(){
         var $container = getItemsContainer();
         if(!$container){
@@ -32,10 +47,20 @@
     };
 
     var countPageItems = function () {
-        var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video', '.comment-renderer'];
-
         var $container = getItemsContainer();
+        
+        if(!$container){
+            return 0;
+        }
+        
+        var commentsCount = $container.querySelectorAll('.comment-renderer').length;
+        if(commentsCount > 0){
+            return commentsCount;
+        }
+        
+        var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video'];
         var count = Math.min(...itemSelectors.map(function (selector) {
+            console.log(selector, $container.querySelectorAll(selector).length);
             return $container ? $container.querySelectorAll(selector).length : 0;
         }).filter(function (value) {
             return value > 0;
@@ -44,11 +69,14 @@
     };
 
     var updatePageCounter = function () {
-        var $counter = document.querySelector('#loaded-page-items-counter');
+        var $counter = window.document.querySelector('#loaded-page-items-counter');
         if ($counter) {
             var itemCount = countPageItems();
             $counter.style.display = itemCount ? 'initial' : 'none';
-            $counter.innerHTML = itemCount;
+            $counter.childNodes.forEach(function($node){
+                $node.parentNode.removeChild($node)
+            });
+            replaceTextContent($counter, itemCount);
             return itemCount;
         }
         return 0;
@@ -63,18 +91,25 @@
 
             _interval = window.setInterval(function () {
                 var $button = window.document.querySelector('.load-more-button');
+                
+                var exit = function(reason){
+                    if(reason){
+                        console.info(reason);
+                    }
+                    window.clearInterval(_interval);
+                    _interval = null;
+                    resolve();
+                    return false;
+                }
 
                 var itemCount = updatePageCounter();
                 if(itemCount === _lastItemCount){
                     _retries ++;
                     if(_retries > 3){
-                        console.info('button exists but there\'s no more items to load. stopping items loader.');
                         _lastItemCount = 0;
                         _retries = 0;
-                        window.clearInterval(_interval);
-                        _interval = null;
-                        resolve();
-                        return false;
+                        $button.style.display = 'none';
+                        exit('button exists but there\'s no more items to load. stopping items loader.');
                     }
                 }else{
                     _retries = 0;
@@ -84,19 +119,11 @@
                 var wasItemCountExceeded = itemCount && maxItemCount ? itemCount >= maxItemCount : false;
 
                 if (!$button || wasItemCountExceeded) {
-                    console.info('stopping items loader');
-                    window.clearInterval(_interval);
-                    _interval = null;
-                    resolve();
-                    return false;
+                    exit('stopping items loader');
                 }
 
                 if ($loadMoreTriggerButton && loadingClass && !$loadMoreTriggerButton.classList.contains(loadingClass)) {
-                    console.info('cancelling items loader');
-                    window.clearInterval(_interval);
-                    _interval = null;
-                    resolve();
-                    return false;
+                    exit('cancelling items loader');
                 }
 
                 if ($button.hasAttribute('disabled') || $button.classList.contains('yt-uix-load-more-loading')) {
@@ -108,7 +135,7 @@
                 $button.click();
                 
                 expandShowMoreButtons();
-            }, 1500);
+            }, _period);
         });
     };
 
@@ -127,21 +154,24 @@
                 updatePageCounter();
             }
         }
-    }, 1500);
+    }, _period);
     
     window.setTimeout(function () {
         expandShowMoreButtons();
         window.scrollTo(0,0);
-    }, 1500);
+    }, _period);
 
     var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn'); //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
     if ($uploadBtn) {
-        var loadMoreLabel = 'Load Items'; //@todo i18n
+        var loadMoreLabel = 'Load More'; //@todo i18n
         var $loadMoreBtn = $uploadBtn.cloneNode(true);
         $loadMoreBtn.setAttribute('id', 'more-items-button');
         var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
         if ($content) {
-            $content.innerHTML = loadMoreLabel;
+            $content.childNodes.forEach(function($node){
+                $node.parentNode.removeChild($node)
+            });
+            replaceTextContent($content, loadMoreLabel);
         }
         if ($loadMoreBtn.hasAttribute('title')) {
             $loadMoreBtn.setAttribute('title', loadMoreLabel);

@@ -4,7 +4,8 @@
     height: 12px;    
     min-width: 12px;
     top: 24px;
-    left: 18%;
+    left: 0;
+    margin-left:25%;
     padding: 2px 4px;
     font-weight: bold;
     background-color: #e62117;
@@ -13,13 +14,12 @@
     cursor: default;
     position: absolute;
     border-radius: 3px;
-    text-align: center;
 }
 
 .more-items-button
 {
     background-position: -384px -70px !important;
-    border-radius: 6px !important;
+    border-radius: 3px !important;
     padding: 0px !important;
 }
 
