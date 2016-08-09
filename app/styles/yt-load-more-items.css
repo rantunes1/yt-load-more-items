@@ -18,7 +18,7 @@
 
 .more-items-button
 {
-    background-position: -384px -70px !important;
+    background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16.png") 33% 33% no-repeat !important;
     border-radius: 3px !important;
     padding: 0px !important;
 }

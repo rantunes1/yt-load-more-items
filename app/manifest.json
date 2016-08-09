@@ -25,5 +25,8 @@
         "styles/yt-load-more-items.css"
       ]
     }
+  ],
+  "web_accessible_resources": [
+    "images/*.*"
   ]
 }
