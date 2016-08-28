@@ -165,7 +165,7 @@
     if ($uploadBtn) {
         var loadMoreLabel = 'Load More'; //@todo i18n
         var $loadMoreBtn = $uploadBtn.cloneNode(true);
-        $loadMoreBtn.setAttribute('id', 'more-items-button');
+        $loadMoreBtn.setAttribute('id', 'more-items-trigger');
         var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
         if ($content) {
             $content.childNodes.forEach(function($node){
@@ -179,16 +179,21 @@
         if ($loadMoreBtn.hasAttribute('href')) {
             $loadMoreBtn.setAttribute('href', '#');
         }
-        $loadMoreBtn.style.position = 'relative';
+        
         var $counter = window.document.createElement('span');
         $counter.setAttribute('id', 'loaded-page-items-counter');
+        
+        $loadMoreBtn.style.position = 'relative';
         $loadMoreBtn.appendChild($counter);
 
         var $icon = $loadMoreBtn.querySelector('.yt-uix-button-icon');
         if ($icon) {
-            $icon.classList.add('more-items-button');
+            $icon.classList.add('more-items-icon');
+            $counter.classList.add('more-items-icon');
+            $loadMoreBtn.classList.add('more-items-button');            
         } else if ($content) {
             $content.classList.add('more-items-button');
+            $counter.classList.add('more-items-button');
         }
             
         $loadMoreBtn.onclick = function (event) {
