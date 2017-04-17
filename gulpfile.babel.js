@@ -113,7 +113,7 @@ gulp.task('wiredep', () => {
 gulp.task('package', function () {
   var manifest = require('./dist/manifest.json');
   return gulp.src('dist/**')
-      .pipe($.zip('yt-load-all-' + manifest.version + '.zip'))
+      .pipe($.zip('yt-load-more-items-' + manifest.version + '.zip'))
       .pipe(gulp.dest('package'));
 });
 

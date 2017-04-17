@@ -1,18 +1,25 @@
 #loaded-page-items-counter 
 {
+    font-size: 11px !important;        
     line-height: 12px !important;
     height: 12px !important;    
     min-width: 12px !important;
-    top: 24px !important;
+    top: 22px !important;
     left: 0 !important;
-    padding: 2px 4px !important;
-    font-weight: bold !important;
+    padding: 2px 4px !important;    
     background-color: #e62117 !important;
-    color: white !important;
-    font-size: 10px !important;        
+    background-image: none !important;
+    color: white !important;    
     cursor: default !important;
     position: absolute !important;
     border-radius: 3px !important;
+    text-align: center !important;
+    text-shadow:
+       1px 1px 0 #000,
+     -1px -1px 0 #000,  
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+       1px 1px 0 #000 !important;    
 }
 
 #loaded-page-items-counter.more-items-icon
@@ -29,11 +36,15 @@
     background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16.png") 33% 33% no-repeat !important;
     border-radius: 3px !important;
 }
+.more-items-icon .yt-uix-tooltip-arialabel{
+    top: 200px !important;
+}
 
 .more-items-button
 {
     padding: 0px !important;
     opacity: 1 !important;
+    position: relative !important;    
 }
 
 
@@ -42,15 +53,22 @@
     animation: pulse 1s infinite;
 }
 
-.more-items-pulse.more-items-button
+.more-items-pulse .more-items-button
 {
     background-color: #00f829 !important;
+    padding: 5px !important;
 }
 
 .more-items-pulse.more-items-icon
 {
     background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16-active.png") 33% 33% no-repeat !important;
 }
+
+.more-items-disabled.more-items-icon
+{
+    background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16-disabled.png") 33% 33% no-repeat !important;
+}
+
 
 @keyframes pulse  
 {

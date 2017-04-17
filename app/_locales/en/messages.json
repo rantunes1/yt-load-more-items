@@ -1,10 +1,10 @@
 {
   "extension_name": {
-    "message": "YT Load More",
+    "message": "YT Auto Load More",
     "description": "The name of the application"
   },
   "extension_description": {
-    "message": "Automatically load more comments, videos, playlists, etc. on YouTube(tm)'s pages.",
+    "message": "Automatically loads more items (comments, videos, playlists, etc.) on YouTube(tm)'s pages.",
     "description": "The description of the application"
   }
 }

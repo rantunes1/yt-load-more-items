@@ -1,15 +1,27 @@
 (function () {
     'use strict';
-    
-    var maxItemCount = 5000;
+
+    var MAX_ITEM_COUNT = 5555;
+    var LOG_ID = '[yt-load-more-items-extension] ';
     var PULSE_CLASS = 'more-items-pulse';
+    var DISABLED_CLASS = 'more-items-disabled';
+    var ICON_CLASS = 'more-items-icon';
+    var BUTTON_CLASS = 'more-items-button';
+    var LOAD_MORE_SELECTOR = '.load-more-button, .compact-shelf-view-all-card-link';
+    var LOAD_MORE_ICON_SELECTOR = '.yt-uix-button-icon';
+    var LOAD_MORE_ITEMS_ID = 'more-items-trigger';
+
+    var LOAD_MORE_LABEL = 'Load More'; //@todo i18n
+    var ALL_LOADED_LABEL = 'All Loaded'; //@todo i18n
 
     var _interval = null;
     var _url = null;
     var _lastItemCount = 0;
     var _retries = 0;
-    var _period = 1500;
-   
+    var _period = 600;
+    var _loading = null;
+    var _user_scrolled = false;
+
     var replaceTextContent = function($elem, text){
         if(!$elem){
             return;
@@ -19,10 +31,47 @@
         });
         if(text){
             var $text = window.document.createTextNode(text);
-            $elem.appendChild($text);        
+            $elem.appendChild($text);
         }
-    }
-    
+    };
+
+    var changesDetector = function (changeSelector, doOnChangeFn) {
+        return function (changes) {
+            changes.forEach(function (change) {
+                var $addedCol = change.addedNodes;
+                if (!$addedCol.length && change.type === 'attributes') {
+                    $addedCol = [change.target];
+                }
+                $addedCol.forEach(function ($added) {
+                    if ($added.nodeType === window.Node.ELEMENT_NODE) {
+                        var $elem = $added.querySelector(changeSelector);
+                        if ($elem) {
+                            //match node's children
+                            try{
+                                doOnChangeFn($elem, $added);
+                            }catch(error){
+                                console.error(LOG_ID, 'error notifying children change on node', doOnChangeFn, $elem, $added, error);
+                            }
+                        } else {
+                            var $parent = $added.parentNode;
+                            if ($parent) {
+                                var $parentMatch = $added.parentNode.querySelector(changeSelector);
+                                if ($parentMatch && $parentMatch.isSameNode($added)) {
+                                    //match on node
+                                    try{
+                                        doOnChangeFn($added, $added);
+                                    }catch(error){
+                                        console.error(LOG_ID, 'error notifying change on node', doOnChangeFn, $added, error);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        };
+    };
+
     var getItemsContainer = function(){
         var $container = window.document.querySelector('#content');
         if(!$container){
@@ -32,13 +81,12 @@
         return $container;
     };
 
-    //automatically expands video description's
-    var expandShowMoreButtons = function(){
+    var expandVideoDescription = function(){
         var $container = getItemsContainer();
         if(!$container){
             return;
         }
-        
+
         $container.querySelectorAll('.yt-uix-expander-head').forEach(function($expander){
             if(!$expander.classList.contains('hidden-expander') && $expander.parentNode && $expander.parentNode.classList.contains('yt-uix-expander-collapsed')){
                 $expander.click();
@@ -48,19 +96,18 @@
 
     var countPageItems = function () {
         var $container = getItemsContainer();
-        
+
         if(!$container){
             return 0;
         }
-        
+
         var commentsCount = $container.querySelectorAll('.comment-renderer').length;
         if(commentsCount > 0){
             return commentsCount;
         }
-        
-        var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video'];
+
+        var itemSelectors = ['.yt-lockup-video', '.contains-action-menu a', '.yt-lockup-content a', '.pl-video', '.subscription-item'];
         var count = Math.min(...itemSelectors.map(function (selector) {
-            console.log(selector, $container.querySelectorAll(selector).length);
             return $container ? $container.querySelectorAll(selector).length : 0;
         }).filter(function (value) {
             return value > 0;
@@ -81,155 +128,254 @@
         }
         return 0;
     };
+    
+    var getNextLoadMoreButton = function(){
+        return window.document.querySelector(LOAD_MORE_SELECTOR);
+    };
+    
+    var disableLoadMoreButton = function($loadMoreButton){
+        //disable the button
+        $loadMoreButton.setAttribute('disabled', 'disabled');
+        var $icon = $loadMoreButton.querySelector(LOAD_MORE_ICON_SELECTOR);
+        if($icon){
+            $icon.classList.add(DISABLED_CLASS);
+        }
+        var updatedText = false;
+        
+        if ($loadMoreButton.hasAttribute('title')) {
+            $loadMoreButton.setAttribute('title', ALL_LOADED_LABEL);
+            updatedText = true;
+        }
+        
+        if ($loadMoreButton.hasAttribute('data-tooltip-text')) {
+            $loadMoreButton.setAttribute('data-tooltip-text', ALL_LOADED_LABEL);
+            $loadMoreButton.setAttribute('data-position', 'topright');
+            updatedText = true;
+        }
+        
+        if(!updatedText){
+            replaceTextContent($loadMoreButton, ALL_LOADED_LABEL);
+        }
+        
+        //@todo replace icon with sorting component        
+    };    
+    
+    var initLoadMoreButton = function(){
+        var $body = document.querySelector('body');
+        if($body && !$body.classList.contains('scrolldetect')){
+            $body.setAttribute('data-scrolldetect-callback','comments-delay-load');
+            $body.classList.add('scrolldetect');
+        }
+        
+        var $loadMoreBtn = $uploadBtn.cloneNode(true);
+        $loadMoreBtn.setAttribute('id', LOAD_MORE_ITEMS_ID);
+        var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
+        if ($content) {
+            $content.childNodes.forEach(function($node){
+                $node.parentNode.removeChild($node)
+            });
+            replaceTextContent($content, LOAD_MORE_LABEL);
+        }
+        if ($loadMoreBtn.hasAttribute('title')) {
+            $loadMoreBtn.setAttribute('title', LOAD_MORE_LABEL);
+        }
+        if ($loadMoreBtn.hasAttribute('href')) {
+            $loadMoreBtn.setAttribute('href', '#');
+        }
 
-    var load = function ($loadMoreTriggerButton, loadingClass) {
+        var $counter = window.document.createElement('span');
+        $counter.setAttribute('id', 'loaded-page-items-counter');
+
+        $loadMoreBtn.appendChild($counter);
+
+        var $icon = $loadMoreBtn.querySelector(LOAD_MORE_ICON_SELECTOR);
+        if ($icon) {
+            $icon.classList.add(ICON_CLASS);
+            $counter.classList.add(ICON_CLASS);
+            $loadMoreBtn.classList.add(BUTTON_CLASS);
+        } else if ($content) {
+            $content.classList.add(BUTTON_CLASS);
+            $counter.classList.add(BUTTON_CLASS);
+        }
+
+        var $button = getNextLoadMoreButton();
+        if(!$button){
+            disableLoadMoreButton($loadMoreBtn);
+        }else{
+            $loadMoreBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+
+                if($loadMoreBtn.getAttribute('disabled')){
+                    return false;
+                }
+
+                var loadingClass = 'loading-all-items';
+                if ($loadMoreBtn.classList.contains(loadingClass)) {
+                    $loadMoreBtn.classList.remove(loadingClass);
+                    if ($icon) {
+                        $icon.classList.remove(PULSE_CLASS);
+                    } else {
+                        $loadMoreBtn.classList.remove(PULSE_CLASS);
+                    }
+                    return false;
+                } else {
+                    $loadMoreBtn.classList.add(loadingClass);
+                    if ($icon) {
+                        $icon.classList.add(PULSE_CLASS);
+                    } else {
+                        $loadMoreBtn.classList.add(PULSE_CLASS);
+                    }
+                }
+
+                _loading = load($loadMoreBtn, loadingClass).then(function () {
+                    if ($icon) {
+                        $icon.classList.remove(PULSE_CLASS);
+                    } else {
+                        $loadMoreBtn.classList.remove(PULSE_CLASS);
+                    }
+                    $loadMoreBtn.classList.remove(loadingClass);
+                    _loading = null;
+                });
+
+                return false;
+            });        
+        }
+        
+        $uploadBtn.parentNode.insertBefore($loadMoreBtn, $uploadBtn);
+    };            
+
+    var load = function ($loadMoreButton, loadingClass) {
+        if(_loading){
+            return _loading;
+        }
         return new window.Promise(function (resolve) {
+            var exit = function(reason, disableButton){
+                if(reason){
+                    console.info(LOG_ID, reason);
+                }
+                window.clearInterval(_interval);
+                _interval = null;
+                if(disableButton === true){
+                    disableLoadMoreButton($loadMoreButton);
+                }
+                resolve();
+                return false;
+            };
+
             if (_interval) {
                 window.clearInterval(_interval);
                 _interval = null;
             }
-
             _interval = window.setInterval(function () {
-                var $button = window.document.querySelector('.load-more-button');
-                
-                var exit = function(reason){
-                    if(reason){
-                        console.info(reason);
-                    }
-                    window.clearInterval(_interval);
-                    _interval = null;
-                    resolve();
-                    return false;
-                }
+                var $button = getNextLoadMoreButton();
 
                 var itemCount = updatePageCounter();
                 if(itemCount === _lastItemCount){
                     _retries ++;
-                    if(_retries > 3){
+                    if(_retries > 100){
                         _lastItemCount = 0;
                         _retries = 0;
                         $button.style.display = 'none';
-                        exit('button exists but there\'s no more items to load. stopping items loader.');
+                        exit('button exists but there\'s no more items to load. stopping items loader.', true);
                     }
                 }else{
                     _retries = 0;
                 }
                 _lastItemCount = itemCount;
 
-                var wasItemCountExceeded = itemCount && maxItemCount ? itemCount >= maxItemCount : false;
+                var wasItemCountExceeded = itemCount && itemCount >= MAX_ITEM_COUNT;
 
                 if (!$button || wasItemCountExceeded) {
-                    exit('stopping items loader');
+                    exit('stopping items loader', true);
                 }
 
-                if ($loadMoreTriggerButton && loadingClass && !$loadMoreTriggerButton.classList.contains(loadingClass)) {
+                if ($loadMoreButton && loadingClass && !$loadMoreButton.classList.contains(loadingClass)) {
                     exit('cancelling items loader');
                 }
 
-                if ($button.hasAttribute('disabled') || $button.classList.contains('yt-uix-load-more-loading')) {
+                if (!$button || $button.hasAttribute('disabled') || $button.classList.contains('yt-uix-load-more-loading')) {
                     return false;
                 }
 
                 $button.removeAttribute('data-scrolldetect-offset');
-                $button.removeAttribute('data-scrolldetect-callback');
+                $button.removeAttribute('data-scrolldetect-callback');                
                 $button.click();
-                
-                expandShowMoreButtons();
+
+                expandVideoDescription();
             }, _period);
         });
     };
 
+    window.document.addEventListener('scroll', function(){
+        _user_scrolled = true;
+        return true;
+    });
     window.setInterval(function () {
-        if (window.location.href !== _url) {
+        var $loadMoreTriggerButton = window.document.querySelector('#' + LOAD_MORE_ITEMS_ID);
+        if (window.location.href !== _url) {            
+            if (_url && $loadMoreTriggerButton) {
+                $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);                
+                _user_scrolled = false;
+            }
             _url = window.location.href;
             window.setTimeout(function () {
+                initLoadMoreButton();
                 updatePageCounter();
-                expandShowMoreButtons();
-                window.scrollTo(0,0);
-            }, 1400);
+                expandVideoDescription();
+                if(!_user_scrolled){
+                    window.scrollTo(0, 0);
+                }
+            }, _period);
         } else {
             var $commentsContainer = window.document.querySelector('.comment-section-renderer-items');
             if ($commentsContainer && !$commentsContainer.classList.contains('processed')) {
                 $commentsContainer.classList.add('processed');
+                if($loadMoreTriggerButton){
+                    $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);                
+                }
+                _user_scrolled = false;
+                initLoadMoreButton();
                 updatePageCounter();
             }
         }
     }, _period);
-    
-    window.setTimeout(function () {
-        expandShowMoreButtons();
-        window.scrollTo(0,0);
-    }, _period);
 
-    var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn'); //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
-    if ($uploadBtn) {
-        var loadMoreLabel = 'Load More'; //@todo i18n
-        var $loadMoreBtn = $uploadBtn.cloneNode(true);
-        $loadMoreBtn.setAttribute('id', 'more-items-trigger');
-        var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
-        if ($content) {
-            $content.childNodes.forEach(function($node){
-                $node.parentNode.removeChild($node)
-            });
-            replaceTextContent($content, loadMoreLabel);
-        }
-        if ($loadMoreBtn.hasAttribute('title')) {
-            $loadMoreBtn.setAttribute('title', loadMoreLabel);
-        }
-        if ($loadMoreBtn.hasAttribute('href')) {
-            $loadMoreBtn.setAttribute('href', '#');
-        }
-        
-        var $counter = window.document.createElement('span');
-        $counter.setAttribute('id', 'loaded-page-items-counter');
-        
-        $loadMoreBtn.style.position = 'relative';
-        $loadMoreBtn.appendChild($counter);
+    window.setTimeout(expandVideoDescription, _period);
 
-        var $icon = $loadMoreBtn.querySelector('.yt-uix-button-icon');
-        if ($icon) {
-            $icon.classList.add('more-items-icon');
-            $counter.classList.add('more-items-icon');
-            $loadMoreBtn.classList.add('more-items-button');            
-        } else if ($content) {
-            $content.classList.add('more-items-button');
-            $counter.classList.add('more-items-button');
+    var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn');
+    //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
+
+    if (!$uploadBtn) {
+        return false;
+    }
+
+    if(window.document.querySelector('#' + LOAD_MORE_ITEMS_ID)){
+        return false;
+    }
+
+    var dialogChangeDetector = changesDetector(LOAD_MORE_SELECTOR, function($button){
+        if(!$button || $button.classList.contains('yt-load-more') || $button.classList.contains('comment-replies-renderer-expander-down')){
+            return;
         }
-            
-        $loadMoreBtn.onclick = function (event) {
+        var eventListener = function(event){
             event.stopPropagation();
             event.preventDefault();
-
-            var loadingClass = 'loading-all-items';
-            if ($loadMoreBtn.classList.contains(loadingClass)) {
-                $loadMoreBtn.classList.remove(loadingClass);
-                if ($icon) {
-                    $icon.classList.remove(PULSE_CLASS);
-                } else if ($content) {
-                    $content.classList.remove(PULSE_CLASS);
-                }
-                return false;
-            } else {
-                $loadMoreBtn.classList.add(loadingClass);
-                if ($icon) {
-                    $icon.classList.add(PULSE_CLASS);
-                } else if ($content) {
-                    $content.classList.add(PULSE_CLASS);
+            $button.removeEventListener('click', eventListener);
+            if(!_loading){
+                var $loadMoreBtn = window.document.querySelector('#' + LOAD_MORE_ITEMS_ID);
+                if($loadMoreBtn){
+                    $loadMoreBtn.click();
                 }
             }
-
-            load($loadMoreBtn, loadingClass, $counter).then(function () {
-                if ($icon) {
-                    $icon.classList.remove(PULSE_CLASS);
-                } else if ($content) {
-                    $content.classList.remove(PULSE_CLASS);
-                }
-                $loadMoreBtn.classList.remove(loadingClass);
-            });
-
             return false;
-        };
-        $uploadBtn.parentNode.insertBefore($loadMoreBtn, $uploadBtn);
-        updatePageCounter();
-    }
+        }
+        //remove auto load on scroll
+        $button.classList.remove('scrolldetect');
+        $button.classList.add('yt-load-more');
+        $button.addEventListener('click', eventListener);
+    });
+    var $body = window.document.querySelector('body');
+
+    new window.MutationObserver(dialogChangeDetector).observe($body, { attributes: true, subtree: true });    
 }());
