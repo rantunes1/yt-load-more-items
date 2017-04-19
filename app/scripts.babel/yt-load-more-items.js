@@ -161,6 +161,9 @@
     };    
     
     var initLoadMoreButton = function(){
+        if(!$uploadBtn){
+            return; //new YT layout
+        }
         var $body = document.querySelector('body');
         if($body && !$body.classList.contains('scrolldetect')){
             $body.setAttribute('data-scrolldetect-callback','comments-delay-load');
@@ -345,6 +348,8 @@
 
     var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn');
     //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
+    //@todo on latest layout selector should be "ytd-button-renderer" but as now yt has continuous scroll there's no point in adding this
+    //to the extension
 
     if (!$uploadBtn) {
         return false;
