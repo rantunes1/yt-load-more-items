@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var MAX_ITEM_COUNT = 5555;
+    var MAX_ITEM_COUNT = 90000;
     var LOG_ID = '[yt-load-more-items-extension] ';
     var PULSE_CLASS = 'more-items-pulse';
     var DISABLED_CLASS = 'more-items-disabled';
@@ -17,8 +17,10 @@
     var _interval = null;
     var _url = null;
     var _lastItemCount = 0;
+    var _lastPressedButton = null;
     var _retries = 0;
-    var _period = 600;
+    var _extBtnCheckInterval = 100;
+    var _loadMoreBtnCheckInterval = 900;
     var _loading = null;
     var _user_scrolled = false;
 
@@ -128,11 +130,11 @@
         }
         return 0;
     };
-    
+
     var getNextLoadMoreButton = function(){
         return window.document.querySelector(LOAD_MORE_SELECTOR);
     };
-    
+
     var disableLoadMoreButton = function($loadMoreButton){
         //disable the button
         $loadMoreButton.setAttribute('disabled', 'disabled');
@@ -141,25 +143,25 @@
             $icon.classList.add(DISABLED_CLASS);
         }
         var updatedText = false;
-        
+
         if ($loadMoreButton.hasAttribute('title')) {
             $loadMoreButton.setAttribute('title', ALL_LOADED_LABEL);
             updatedText = true;
         }
-        
+
         if ($loadMoreButton.hasAttribute('data-tooltip-text')) {
             $loadMoreButton.setAttribute('data-tooltip-text', ALL_LOADED_LABEL);
             $loadMoreButton.setAttribute('data-position', 'topright');
             updatedText = true;
         }
-        
+
         if(!updatedText){
             replaceTextContent($loadMoreButton, ALL_LOADED_LABEL);
         }
-        
-        //@todo replace icon with sorting component        
-    };    
-    
+
+        //@todo replace icon with sorting component
+    };
+
     var initLoadMoreButton = function(){
         if(!$uploadBtn){
             return; //new YT layout
@@ -169,7 +171,7 @@
             $body.setAttribute('data-scrolldetect-callback','comments-delay-load');
             $body.classList.add('scrolldetect');
         }
-        
+
         var $loadMoreBtn = $uploadBtn.cloneNode(true);
         $loadMoreBtn.setAttribute('id', LOAD_MORE_ITEMS_ID);
         var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
@@ -242,11 +244,11 @@
                 });
 
                 return false;
-            });        
+            });
         }
-        
+
         $uploadBtn.parentNode.insertBefore($loadMoreBtn, $uploadBtn);
-    };            
+    };
 
     var load = function ($loadMoreButton, loadingClass) {
         if(_loading){
@@ -276,37 +278,48 @@
                 var itemCount = updatePageCounter();
                 if(itemCount === _lastItemCount){
                     _retries ++;
-                    if(_retries > 100){
+                    if(_retries > 15){
                         _lastItemCount = 0;
                         _retries = 0;
-                        $button.style.display = 'none';
-                        exit('button exists but there\'s no more items to load. stopping items loader.', true);
+                        if(_lastPressedButton === $button){
+                            //button can't be processed
+                            console.log(LOG_ID, 'unable to get sub-items. proceeding to next item');
+                            if($button){
+                                $button.parentNode.removeChild($button);
+                            }
+                        }
+                        return false;
                     }
                 }else{
                     _retries = 0;
                 }
                 _lastItemCount = itemCount;
+                
+                if (!$button) {
+                    return exit('stopping items loader - can\'t find any more buttons', true);
+                    
+                }
 
                 var wasItemCountExceeded = itemCount && itemCount >= MAX_ITEM_COUNT;
-
-                if (!$button || wasItemCountExceeded) {
-                    exit('stopping items loader', true);
+                if (wasItemCountExceeded) {
+                    return exit('stopping items loader - item count exceedeed: ' + itemCount, true);
                 }
 
                 if ($loadMoreButton && loadingClass && !$loadMoreButton.classList.contains(loadingClass)) {
-                    exit('cancelling items loader');
+                    return exit('cancelling items loader');
                 }
 
-                if (!$button || $button.hasAttribute('disabled') || $button.classList.contains('yt-uix-load-more-loading')) {
+                if ($button.hasAttribute('disabled') || $button.classList.contains('yt-uix-load-more-loading')) {
                     return false;
                 }
 
                 $button.removeAttribute('data-scrolldetect-offset');
-                $button.removeAttribute('data-scrolldetect-callback');                
+                $button.removeAttribute('data-scrolldetect-callback');
                 $button.click();
+                _lastPressedButton = $button;
 
                 expandVideoDescription();
-            }, _period);
+            }, _loadMoreBtnCheckInterval);
         });
     };
 
@@ -314,11 +327,12 @@
         _user_scrolled = true;
         return true;
     });
+    
     window.setInterval(function () {
         var $loadMoreTriggerButton = window.document.querySelector('#' + LOAD_MORE_ITEMS_ID);
-        if (window.location.href !== _url) {            
+        if (window.location.href !== _url) {
             if (_url && $loadMoreTriggerButton) {
-                $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);                
+                $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);
                 _user_scrolled = false;
             }
             _url = window.location.href;
@@ -329,22 +343,22 @@
                 if(!_user_scrolled){
                     window.scrollTo(0, 0);
                 }
-            }, _period);
+            }, _extBtnCheckInterval);
         } else {
             var $commentsContainer = window.document.querySelector('.comment-section-renderer-items');
             if ($commentsContainer && !$commentsContainer.classList.contains('processed')) {
                 $commentsContainer.classList.add('processed');
                 if($loadMoreTriggerButton){
-                    $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);                
+                    $loadMoreTriggerButton.parentNode.removeChild($loadMoreTriggerButton);
                 }
                 _user_scrolled = false;
                 initLoadMoreButton();
                 updatePageCounter();
             }
         }
-    }, _period);
+    }, _extBtnCheckInterval);
 
-    window.setTimeout(expandVideoDescription, _period);
+    window.setTimeout(expandVideoDescription, _extBtnCheckInterval);
 
     var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn');
     //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
@@ -382,5 +396,5 @@
     });
     var $body = window.document.querySelector('body');
 
-    new window.MutationObserver(dialogChangeDetector).observe($body, { attributes: true, subtree: true });    
+    new window.MutationObserver(dialogChangeDetector).observe($body, { attributes: true, subtree: true });
 }());

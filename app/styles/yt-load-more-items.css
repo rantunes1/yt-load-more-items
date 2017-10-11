@@ -7,7 +7,7 @@
     top: 22px !important;
     left: 0 !important;
     padding: 2px 4px !important;    
-    background-color: #e62117 !important;
+    background-color: #f00 !important;
     background-image: none !important;
     color: white !important;    
     cursor: default !important;
@@ -21,6 +21,12 @@
       -1px 1px 0 #000,
        1px 1px 0 #000 !important;    
 }
+
+#loaded-page-items-counter:hover
+{
+    background-color: #e62117 !important;
+}
+
 
 #loaded-page-items-counter.more-items-icon
 {
