@@ -25,8 +25,8 @@
 #loaded-page-items-counter:hover
 {
     background-color: #e62117 !important;
+    font-size: 12px !important;
 }
-
 
 #loaded-page-items-counter.more-items-icon
 {
@@ -37,11 +37,26 @@
     margin-left: 25% !important;
 }
 
+[data-original-btn=creator]:before
+{
+    opacity: 1 !important;
+    background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16.png") 33% 33% no-repeat !important;
+    width: 24px !important;
+    height: 24px !important;
+}    
+
+[data-original-btn=creator]
+{
+    position: relative !important;
+    cursor: pointer !important;
+}
+
 .more-items-icon
 {
     background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16.png") 33% 33% no-repeat !important;
     border-radius: 3px !important;
 }
+
 .more-items-icon .yt-uix-tooltip-arialabel{
     top: 200px !important;
 }
@@ -50,13 +65,7 @@
 {
     padding: 0px !important;
     opacity: 1 !important;
-    position: relative !important;    
-}
-
-
-.more-items-pulse
-{
-    animation: pulse 1s infinite;
+    position: relative !important;        
 }
 
 .more-items-pulse .more-items-button
@@ -65,14 +74,16 @@
     padding: 5px !important;
 }
 
-.more-items-pulse.more-items-icon
+.more-items-pulse.more-items-icon, .more-items-pulse[data-original-btn=creator]:before
 {
+    animation: pulse 1s infinite;
     background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16-active.png") 33% 33% no-repeat !important;
 }
 
-.more-items-disabled.more-items-icon
+.more-items-disabled.more-items-icon, .more-items-disabled[data-original-btn=creator]:before
 {
     background: url("chrome-extension://__MSG_@@extension_id__/images/icon-16-disabled.png") 33% 33% no-repeat !important;
+    cursor: default !important;
 }
 
 

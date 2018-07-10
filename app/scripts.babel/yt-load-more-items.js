@@ -9,6 +9,8 @@
     var BUTTON_CLASS = 'more-items-button';
     var LOAD_MORE_SELECTOR = '.load-more-button, .compact-shelf-view-all-card-link';
     var LOAD_MORE_ICON_SELECTOR = '.yt-uix-button-icon';
+    var VIDEO_UPLOAD_BUTTON_SELECTOR = '#upload-button, #upload-btn';
+    var VIDEO_CREATOR_BUTTON_SELECTOR = '#yt-masthead-creation-button';
     var LOAD_MORE_ITEMS_ID = 'more-items-trigger';
 
     var LOAD_MORE_LABEL = 'Load More'; //@todo i18n
@@ -20,9 +22,11 @@
     var _lastPressedButton = null;
     var _retries = 0;
     var _extBtnCheckInterval = 100;
-    var _loadMoreBtnCheckInterval = 900;
+    var _loadMoreBtnCheckInterval = 500;
     var _loading = null;
     var _user_scrolled = false;
+    var _$uploaderButton = null;
+    var _$creatorButton = null;
 
     var replaceTextContent = function($elem, text){
         if(!$elem){
@@ -138,13 +142,14 @@
     var disableLoadMoreButton = function($loadMoreButton){
         //disable the button
         $loadMoreButton.setAttribute('disabled', 'disabled');
+        $loadMoreButton.classList.add(DISABLED_CLASS);
         var $icon = $loadMoreButton.querySelector(LOAD_MORE_ICON_SELECTOR);
         if($icon){
             $icon.classList.add(DISABLED_CLASS);
         }
+        
         var updatedText = false;
-
-        if ($loadMoreButton.hasAttribute('title')) {
+        if ($loadMoreButton.hasAttribute('title') || $loadMoreButton.hasAttribute('aria-label')) {
             $loadMoreButton.setAttribute('title', ALL_LOADED_LABEL);
             updatedText = true;
         }
@@ -163,31 +168,43 @@
     };
 
     var initLoadMoreButton = function(){
-        if(!$uploadBtn){
-            return; //new YT layout
-        }
         var $body = document.querySelector('body');
         if($body && !$body.classList.contains('scrolldetect')){
             $body.setAttribute('data-scrolldetect-callback','comments-delay-load');
             $body.classList.add('scrolldetect');
         }
 
-        var $loadMoreBtn = $uploadBtn.cloneNode(true);
+        var $loadMoreBtn = _$uploaderButton ? _$uploaderButton.cloneNode(true) : _$creatorButton.cloneNode();
         $loadMoreBtn.setAttribute('id', LOAD_MORE_ITEMS_ID);
-        var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
-        if ($content) {
-            $content.childNodes.forEach(function($node){
-                $node.parentNode.removeChild($node)
-            });
-            replaceTextContent($content, LOAD_MORE_LABEL);
-        }
-        if ($loadMoreBtn.hasAttribute('title')) {
-            $loadMoreBtn.setAttribute('title', LOAD_MORE_LABEL);
-        }
-        if ($loadMoreBtn.hasAttribute('href')) {
-            $loadMoreBtn.setAttribute('href', '#');
+        $loadMoreBtn.setAttribute('data-original-btn', _$uploaderButton ? 'uploader' : 'creator');
+        
+        if(_$uploaderButton){          
+            var $content = $loadMoreBtn.querySelector('.yt-uix-button-content');
+            if ($content) {
+                $content.childNodes.forEach(function($node){
+                    $node.parentNode.removeChild($node)
+                });
+                replaceTextContent($content, LOAD_MORE_LABEL);
+            }
+            if ($loadMoreBtn.hasAttribute('title')) {
+                $loadMoreBtn.setAttribute('title', LOAD_MORE_LABEL);
+            }
+            if ($loadMoreBtn.hasAttribute('href')) {
+                $loadMoreBtn.setAttribute('href', '#');
+            }
+        } else if (_$creatorButton) {
+            while ($loadMoreBtn.classList.length > 0) {
+                $loadMoreBtn.classList.remove($loadMoreBtn.classList.item(0));
+            }
+            $loadMoreBtn.classList.add('yt-uix-button-has-icon'); 
+            if ($loadMoreBtn.hasAttribute('aria-label')) {
+                $loadMoreBtn.setAttribute('aria-label', LOAD_MORE_LABEL);
+            }
+        } else {
+            return false; //new yt material layout with infinite scroll
         }
 
+        
         var $counter = window.document.createElement('span');
         $counter.setAttribute('id', 'loaded-page-items-counter');
 
@@ -247,7 +264,7 @@
             });
         }
 
-        $uploadBtn.parentNode.insertBefore($loadMoreBtn, $uploadBtn);
+        (_$uploaderButton || _$creatorButton).parentNode.insertBefore($loadMoreBtn, (_$uploaderButton || _$creatorButton));
     };
 
     var load = function ($loadMoreButton, loadingClass) {
@@ -296,8 +313,7 @@
                 _lastItemCount = itemCount;
                 
                 if (!$button) {
-                    return exit('stopping items loader - can\'t find any more buttons', true);
-                    
+                    return exit('stopping items loader - can\'t find any more buttons', true);                    
                 }
 
                 var wasItemCountExceeded = itemCount && itemCount >= MAX_ITEM_COUNT;
@@ -328,7 +344,7 @@
         return true;
     });
     
-    window.setInterval(function () {
+    window.document.addEventListener('load', function () {
         var $loadMoreTriggerButton = window.document.querySelector('#' + LOAD_MORE_ITEMS_ID);
         if (window.location.href !== _url) {
             if (_url && $loadMoreTriggerButton) {
@@ -360,12 +376,15 @@
 
     window.setTimeout(expandVideoDescription, _extBtnCheckInterval);
 
-    var $uploadBtn = window.document.querySelector('#upload-button, #upload-btn');
+    _$uploaderButton = window.document.querySelector(VIDEO_UPLOAD_BUTTON_SELECTOR);
     //@todo 'upload_btn' was used on previous interface. remove selector once new ui is rolled out globally
-    //@todo on latest layout selector should be "ytd-button-renderer" but as now yt has continuous scroll there's no point in adding this
-    //to the extension
+    //@todo on latest layout selector should be "ytd-button-renderer" but as now yt has continuous scroll there's no point in adding this to the extension
+    
+    //on July 2018 yt restored the creator button in place of the uploader one.
+    //will keep supporting the uploader version just in case.
+    _$creatorButton = window.document.querySelector(VIDEO_CREATOR_BUTTON_SELECTOR);
 
-    if (!$uploadBtn) {
+    if (!_$uploaderButton || !_$creatorButton) {
         return false;
     }
 
@@ -396,5 +415,5 @@
     });
     var $body = window.document.querySelector('body');
 
-    new window.MutationObserver(dialogChangeDetector).observe($body, { attributes: true, subtree: true });
+    new window.MutationObserver(dialogChangeDetector).observe($body, { attributes: true, childList: true, subtree: true });
 }());
